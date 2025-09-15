@@ -133,6 +133,23 @@ npm start
 
 ## 🌐 Deploy na Vercel
 
+### Configuração Obrigatória para Requisições HTTP
+
+**⚠️ IMPORTANTE:** Para que as requisições HTTP funcionem na Vercel, você DEVE configurar a seguinte variável de ambiente:
+
+**Nas configurações da Vercel:**
+1. Acesse seu projeto na Vercel
+2. Vá em **Settings** → **Environment Variables**
+3. Adicione a variável:
+   - **Name:** `NODE_TLS_REJECT_UNAUTHORIZED`
+   - **Value:** `0`
+   - **Environment:** Production (e Development se necessário)
+
+**Configuração adicional:**
+- **Name:** `API_ENV`
+- **Value:** `prod`
+- **Environment:** Production
+
 ### Problema de Mixed Content Resolvido
 
 O sistema inclui um **proxy interno** que resolve automaticamente problemas de Mixed Content quando deployado em HTTPS (como na Vercel) mas conectando a APIs HTTP.
@@ -140,11 +157,12 @@ O sistema inclui um **proxy interno** que resolve automaticamente problemas de M
 **Como funciona:**
 - O cliente (navegador) se comunica apenas via HTTPS com o servidor Next.js
 - O servidor Next.js faz as requisições HTTP para a API externa
+- A configuração `NODE_TLS_REJECT_UNAUTHORIZED=0` permite requisições HTTP inseguras
 - Elimina completamente erros de "Mixed Content" em produção
 
 **Configuração automática:**
-- Não requer configuração adicional
-- Funciona automaticamente em desenvolvimento e produção
+- Proxy configurado automaticamente
+- Funciona em desenvolvimento e produção após configurar as variáveis de ambiente
 - Mantém todas as funcionalidades da API intactas
 
 ## 📊 Estrutura da API

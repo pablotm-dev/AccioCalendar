@@ -1,5 +1,9 @@
 import { type NextRequest, NextResponse } from "next/server"
 
+if (process.env.NODE_ENV === "production") {
+  process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0"
+}
+
 const getApiBaseUrl = () => {
   const apiEnv = process.env.API_ENV || process.env.NODE_ENV
 
