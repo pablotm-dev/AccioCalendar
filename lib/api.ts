@@ -9,7 +9,7 @@ const getApiBaseUrl = () => {
   const apiEnv = process.env.API_ENV || process.env.NODE_ENV
 
   if (apiEnv === "prod" || apiEnv === "production") {
-    return "http://179.190.40.40:8081/"
+    return "http://179.190.40.40:8081"
   }
 
   return "http://localhost:8081"

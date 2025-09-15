@@ -61,33 +61,69 @@ cd calendar-management
 npm install
 \`\`\`
 
-### 3. Configure o ambiente (opcional)
-Crie um arquivo `.env.local` se precisar de configurações específicas:
-\`\`\`env
-NEXT_PUBLIC_API_URL=http://localhost:8081
-API_ENV=development
-\`\`\`
+### 3. Execute o projeto
 
-### 4. Execute o projeto
-
-#### Para desenvolvimento:
+#### ⚡ DESENVOLVIMENTO (Recomendado para testes)
 \`\`\`bash
-# Servidor de desenvolvimento
 npm run dev
+\`\`\`
+**API usada:** `http://localhost:8081`  
+**Acesse:** `http://localhost:3000`
 
-# Build para desenvolvimento (API localhost)
+#### 🏗️ PRODUÇÃO (Após desenvolvimento completo)
+
+**Para ambiente de desenvolvimento:**
+\`\`\`bash
 npm run build:dev
 npm start
 \`\`\`
+**API usada:** `http://localhost:8081`
 
-#### Para produção:
+**Para ambiente de produção:**
 \`\`\`bash
-# Build para produção (API servidor remoto)
 npm run build:prod
 npm start
 \`\`\`
+**API usada:** `http://179.190.40.40:8081/`
 
-O sistema estará disponível em `http://localhost:3000`
+#### 🧪 TESTANDO BUILD DE PRODUÇÃO LOCALMENTE
+
+Para testar se o build de produção está funcionando corretamente:
+
+**1. Teste com API local:**
+\`\`\`bash
+# Faça o build para desenvolvimento
+npm run build:dev
+
+# Execute o servidor de produção
+npm start
+
+# Acesse: http://localhost:3000
+\`\`\`
+
+**2. Teste com API de produção:**
+\`\`\`bash
+# Faça o build para produção
+npm run build:prod
+
+# Execute o servidor de produção  
+npm start
+
+# Acesse: http://localhost:3000
+\`\`\`
+
+**3. Verificações importantes:**
+- ✅ A aplicação deve carregar sem erros
+- ✅ Login deve funcionar (admin/admin)
+- ✅ Todas as páginas devem ser acessíveis
+- ✅ API deve responder corretamente
+- ✅ Não deve haver erros no console do navegador
+
+### ⚠️ IMPORTANTE - Comandos Corretos
+
+- **Para desenvolvimento/testes:** Use `npm run dev` (não precisa de build)
+- **Para produção:** Primeiro `npm run build:dev` ou `npm run build:prod`, depois `npm start`
+- **NUNCA use** `npm start` sem fazer build antes
 
 ## 🔐 Credenciais de Acesso
 
