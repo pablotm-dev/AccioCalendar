@@ -1,11 +1,10 @@
 const getApiBaseUrl = () => {
-  // Check if we're in browser environment
+  // Always use the internal proxy route for client-side requests
   if (typeof window !== "undefined") {
-    // Client-side: use environment variable set during build
-    return process.env.NEXT_PUBLIC_API_URL || "http://localhost:8081"
+    return "/api/proxy"
   }
 
-  // Server-side: determine based on API_ENV or NODE_ENV
+  // Server-side: use direct API calls
   const apiEnv = process.env.API_ENV || process.env.NODE_ENV
 
   if (apiEnv === "prod" || apiEnv === "production") {

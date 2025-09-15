@@ -11,6 +11,7 @@ Frontend em React para gerenciamento de calendário e apontamentos de horas, int
 - **Consulta de apontamentos** com visualização em lista e calendário
 - **Filtros avançados** por cliente, projeto, tarefa e período
 - **Integração completa** com API REST
+- **Proxy interno** para resolver problemas de Mixed Content em HTTPS
 
 ## 🛠️ Tecnologias Utilizadas
 
@@ -43,7 +44,7 @@ API: `http://localhost:8081`
 \`\`\`bash
 npm run build:prod
 \`\`\`
-API: `http://179.190.40.40:8081/`
+API: `http://179.190.40.40:8081`
 
 ## 🚀 Instalação e Execução
 
@@ -84,7 +85,7 @@ npm start
 npm run build:prod
 npm start
 \`\`\`
-**API usada:** `http://179.190.40.40:8081/`
+**API usada:** `http://179.190.40.40:8081`
 
 #### 🧪 TESTANDO BUILD DE PRODUÇÃO LOCALMENTE
 
@@ -129,6 +130,22 @@ npm start
 
 - **Usuário:** admin
 - **Senha:** admin
+
+## 🌐 Deploy na Vercel
+
+### Problema de Mixed Content Resolvido
+
+O sistema inclui um **proxy interno** que resolve automaticamente problemas de Mixed Content quando deployado em HTTPS (como na Vercel) mas conectando a APIs HTTP.
+
+**Como funciona:**
+- O cliente (navegador) se comunica apenas via HTTPS com o servidor Next.js
+- O servidor Next.js faz as requisições HTTP para a API externa
+- Elimina completamente erros de "Mixed Content" em produção
+
+**Configuração automática:**
+- Não requer configuração adicional
+- Funciona automaticamente em desenvolvimento e produção
+- Mantém todas as funcionalidades da API intactas
 
 ## 📊 Estrutura da API
 
@@ -257,6 +274,12 @@ npm run lint         # Verificar código
 ### Problemas de autenticação
 - Use as credenciais: admin/admin
 - Limpe o localStorage se necessário
+
+### Erro de Mixed Content (Resolvido)
+- ✅ **Problema resolvido automaticamente** pelo proxy interno
+- ✅ Funciona em desenvolvimento e produção
+- ✅ Não requer configuração adicional
+- ✅ Compatível com deploy na Vercel
 
 ## 📞 Suporte
 
