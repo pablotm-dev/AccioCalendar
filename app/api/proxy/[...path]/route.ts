@@ -1,58 +1,102 @@
-import { NextResponse } from "next/server"
+import { type NextRequest, NextResponse } from "next/server"
 
-export async function GET() {
+const getApiBaseUrl = () => {
   const apiEnv = process.env.API_ENV || process.env.NODE_ENV
-  const prodUrl = "http://179.190.40.40:8081"
-  const devUrl = "http://localhost:8081"
 
-  const apiUrl = apiEnv === "prod" || apiEnv === "production" ? prodUrl : devUrl
+  if (apiEnv === "prod" || apiEnv === "production") {
+    return "http://179.190.40.40:8081"
+  }
 
-  console.log("[v0] Test Connection - Environment:", apiEnv)
-  console.log("[v0] Test Connection - API URL:", apiUrl)
-  console.log("[v0] Test Connection - All env vars:", Object.keys(process.env))
+  return "http://localhost:8081"
+}
+
+const API_BASE_URL = getApiBaseUrl()
+
+export async function GET(request: NextRequest, { params }: { params: { path: string[] } }) {
+  const path = params.path.join("/")
+  const searchParams = request.nextUrl.searchParams.toString()
+  const url = `${API_BASE_URL}/${path}${searchParams ? `?${searchParams}` : ""}`
 
   try {
-    // Teste simples de conectividade
-    const testUrl = `${apiUrl}/tasks`
-    console.log("[v0] Testing connection to:", testUrl)
-
-    const response = await fetch(testUrl, {
+    const response = await fetch(url, {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
       },
-      // Timeout de 10 segundos
-      signal: AbortSignal.timeout(10000),
     })
 
-    console.log("[v0] Connection test response status:", response.status)
-    console.log("[v0] Connection test response headers:", Object.fromEntries(response.headers.entries()))
-
-    const responseText = await response.text()
-    console.log("[v0] Connection test response body:", responseText)
-
-    return NextResponse.json({
-      success: true,
-      environment: apiEnv,
-      apiUrl: apiUrl,
-      testUrl: testUrl,
-      status: response.status,
-      responsePreview: responseText.substring(0, 200),
-      headers: Object.fromEntries(response.headers.entries()),
-    })
+    const data = await response.json()
+    return NextResponse.json(data, { status: response.status })
   } catch (error) {
-    console.error("[v0] Connection test failed:", error)
+    console.error("API Proxy Error:", error)
+    return NextResponse.json({ error: "Failed to fetch data" }, { status: 500 })
+  }
+}
 
-    return NextResponse.json(
-      {
-        success: false,
-        environment: apiEnv,
-        apiUrl: apiUrl,
-        error: error instanceof Error ? error.message : String(error),
-        errorType: error instanceof Error ? error.constructor.name : typeof error,
-        stack: error instanceof Error ? error.stack : undefined,
+export async function POST(request: NextRequest, { params }: { params: { path: string[] } }) {
+  const path = params.path.join("/")
+  const url = `${API_BASE_URL}/${path}`
+  const body = await request.text()
+
+  try {
+    const response = await fetch(url, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
       },
-      { status: 500 },
-    )
+      body,
+    })
+
+    const data = await response.json()
+    return NextResponse.json(data, { status: response.status })
+  } catch (error) {
+    console.error("API Proxy Error:", error)
+    return NextResponse.json({ error: "Failed to create data" }, { status: 500 })
+  }
+}
+
+export async function PUT(request: NextRequest, { params }: { params: { path: string[] } }) {
+  const path = params.path.join("/")
+  const url = `${API_BASE_URL}/${path}`
+  const body = await request.text()
+
+  try {
+    const response = await fetch(url, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body,
+    })
+
+    const data = await response.json()
+    return NextResponse.json(data, { status: response.status })
+  } catch (error) {
+    console.error("API Proxy Error:", error)
+    return NextResponse.json({ error: "Failed to update data" }, { status: 500 })
+  }
+}
+
+export async function DELETE(request: NextRequest, { params }: { params: { path: string[] } }) {
+  const path = params.path.join("/")
+  const url = `${API_BASE_URL}/${path}`
+
+  try {
+    const response = await fetch(url, {
+      method: "DELETE",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    })
+
+    if (response.status === 204) {
+      return new NextResponse(null, { status: 204 })
+    }
+
+    const data = await response.json()
+    return NextResponse.json(data, { status: response.status })
+  } catch (error) {
+    console.error("API Proxy Error:", error)
+    return NextResponse.json({ error: "Failed to delete data" }, { status: 500 })
   }
 }
