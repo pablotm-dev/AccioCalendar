@@ -11,7 +11,7 @@ const getApiBaseUrl = () => {
     return "http://179.190.40.40:8081"
   }
 
-  return "http://localhost:8081"
+  return "http://179.190.40.40:8081"
 }
 
 const API_BASE_URL = getApiBaseUrl()
