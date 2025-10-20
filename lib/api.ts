@@ -1,4 +1,4 @@
-import { API_BASE_URL } from "./env"
+const API_BASE_URL = "https://calendar-management-bu7d.onrender.com/api"
 
 export interface Cliente {
   id: number
@@ -37,13 +37,26 @@ export const clienteApi = {
   },
 
   create: async (cliente: Omit<Cliente, "id">): Promise<Cliente> => {
+    console.log("[v0] Creating cliente with data:", cliente)
+
     const response = await fetch(`${API_BASE_URL}/clientes`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(cliente),
     })
-    if (!response.ok) throw new Error("Failed to create cliente")
-    return response.json()
+
+    console.log("[v0] Response status:", response.status)
+    console.log("[v0] Response headers:", Object.fromEntries(response.headers.entries()))
+
+    if (!response.ok) {
+      const errorText = await response.text()
+      console.error("[v0] Error response body:", errorText)
+      throw new Error(`Failed to create cliente: ${response.status} - ${errorText}`)
+    }
+
+    const data = await response.json()
+    console.log("[v0] Success response:", data)
+    return data
   },
 
   update: async (id: number, cliente: Omit<Cliente, "id">): Promise<Cliente> => {
@@ -85,12 +98,22 @@ export const projetoApi = {
   },
 
   create: async (projeto: Omit<Projeto, "id">): Promise<Projeto> => {
+    console.log("[v0] Creating projeto with data:", projeto)
+
     const response = await fetch(`${API_BASE_URL}/projetos`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(projeto),
     })
-    if (!response.ok) throw new Error("Failed to create projeto")
+
+    console.log("[v0] Response status:", response.status)
+
+    if (!response.ok) {
+      const errorText = await response.text()
+      console.error("[v0] Error response body:", errorText)
+      throw new Error(`Failed to create projeto: ${response.status} - ${errorText}`)
+    }
+
     return response.json()
   },
 
@@ -139,12 +162,22 @@ export const tarefaApi = {
   },
 
   create: async (tarefa: Omit<Tarefa, "id">): Promise<Tarefa> => {
+    console.log("[v0] Creating tarefa with data:", tarefa)
+
     const response = await fetch(`${API_BASE_URL}/tasks`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(tarefa),
     })
-    if (!response.ok) throw new Error("Failed to create task")
+
+    console.log("[v0] Response status:", response.status)
+
+    if (!response.ok) {
+      const errorText = await response.text()
+      console.error("[v0] Error response body:", errorText)
+      throw new Error(`Failed to create task: ${response.status} - ${errorText}`)
+    }
+
     return response.json()
   },
 
