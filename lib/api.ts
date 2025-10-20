@@ -1,4 +1,4 @@
-const API_BASE_URL = "/api"
+import { API_BASE_URL } from "./env"
 
 export interface Cliente {
   id: number
@@ -164,4 +164,176 @@ export const tarefaApi = {
     })
     if (!response.ok) throw new Error("Failed to delete task")
   },
+}
+
+// Report interfaces and API functions
+export interface CollaboratorReport {
+  collaboratorEmail: string
+  totalHoursWorked: number
+  hoursPerProject: Array<{
+    projectId: number
+    projectName: string
+    hours: number
+    clientName: string
+  }>
+  hoursPerTask: Array<{
+    taskId: number
+    taskName: string
+    hours: number
+    projectId: number
+    projectName: string
+  }>
+  productivityAnalysis: {
+    hoursByDayOfWeek: Record<string, number>
+    hoursByMonth: Record<string, number>
+    trendData: Array<{
+      date: string
+      hours: number
+    }>
+    peakPeriods: Array<{
+      startDate: string
+      endDate: string
+      hours: number
+    }>
+    lowPeriods: Array<{
+      startDate: string
+      endDate: string
+      hours: number
+    }>
+  }
+  contextDetails: {
+    hoursByTimePeriod: {
+      MORNING: number
+      AFTERNOON: number
+      EVENING: number
+    }
+    averageSessionDurationMinutes: number
+  }
+}
+
+export interface ClientReport {
+  clientId: number
+  clientName: string
+  projects: Array<{
+    projectId: number
+    projectName: string
+    totalHours: number
+    collaboratorHours: Array<{
+      collaboratorEmail: string
+      hours: number
+    }>
+    tasks: Array<{
+      taskId: number
+      taskName: string
+      totalHours: number
+      collaboratorHours: Array<{
+        collaboratorEmail: string
+        hours: number
+      }>
+    }>
+  }>
+}
+
+export type PeriodType = "WEEK" | "MONTH" | "QUARTER" | "YEAR"
+
+// Report API functions
+export const reportApi = {
+  // Get report for a specific collaborator
+  getCollaboratorReport: async (
+    email: string,
+    options?: {
+      startDate?: string
+      endDate?: string
+      periodType?: PeriodType
+      projectIds?: number[]
+      taskIds?: number[]
+    },
+  ): Promise<CollaboratorReport> => {
+    const params = new URLSearchParams()
+    if (options?.startDate) params.append("startDate", options.startDate)
+    if (options?.endDate) params.append("endDate", options.endDate)
+    if (options?.periodType) params.append("periodType", options.periodType)
+    if (options?.projectIds?.length) params.append("projectIds", options.projectIds.join(","))
+    if (options?.taskIds?.length) params.append("taskIds", options.taskIds.join(","))
+
+    const response = await fetch(`${API_BASE_URL}/reports/collaborators/${email}?${params}`)
+    if (!response.ok) throw new Error("Failed to fetch collaborator report")
+    return response.json()
+  },
+
+  // Get reports for all collaborators
+  getAllCollaboratorReports: async (options?: {
+    startDate?: string
+    endDate?: string
+    periodType?: PeriodType
+    collaboratorEmails?: string[]
+    projectIds?: number[]
+    taskIds?: number[]
+  }): Promise<CollaboratorReport[]> => {
+    const params = new URLSearchParams()
+    if (options?.startDate) params.append("startDate", options.startDate)
+    if (options?.endDate) params.append("endDate", options.endDate)
+    if (options?.periodType) params.append("periodType", options.periodType)
+    if (options?.collaboratorEmails?.length) params.append("collaboratorEmails", options.collaboratorEmails.join(","))
+    if (options?.projectIds?.length) params.append("projectIds", options.projectIds.join(","))
+    if (options?.taskIds?.length) params.append("taskIds", options.taskIds.join(","))
+
+    const response = await fetch(`${API_BASE_URL}/reports/collaborators?${params}`)
+    if (!response.ok) throw new Error("Failed to fetch collaborator reports")
+    return response.json()
+  },
+
+  // Get report for a specific client
+  getClientReport: async (
+    clientId: number,
+    options?: {
+      startDate?: string
+      endDate?: string
+      periodType?: PeriodType
+      collaboratorEmails?: string[]
+      projectIds?: number[]
+      taskIds?: number[]
+    },
+  ): Promise<ClientReport> => {
+    const params = new URLSearchParams()
+    if (options?.startDate) params.append("startDate", options.startDate)
+    if (options?.endDate) params.append("endDate", options.endDate)
+    if (options?.periodType) params.append("periodType", options.periodType)
+    if (options?.collaboratorEmails?.length) params.append("collaboratorEmails", options.collaboratorEmails.join(","))
+    if (options?.projectIds?.length) params.append("projectIds", options.projectIds.join(","))
+    if (options?.taskIds?.length) params.append("taskIds", options.taskIds.join(","))
+
+    const response = await fetch(`${API_BASE_URL}/reports/clients/${clientId}?${params}`)
+    if (!response.ok) throw new Error("Failed to fetch client report")
+    return response.json()
+  },
+
+  // Get reports for all clients
+  getAllClientReports: async (options?: {
+    startDate?: string
+    endDate?: string
+    periodType?: PeriodType
+    collaboratorEmails?: string[]
+    projectIds?: number[]
+    taskIds?: number[]
+  }): Promise<ClientReport[]> => {
+    const params = new URLSearchParams()
+    if (options?.startDate) params.append("startDate", options.startDate)
+    if (options?.endDate) params.append("endDate", options.endDate)
+    if (options?.periodType) params.append("periodType", options.periodType)
+    if (options?.collaboratorEmails?.length) params.append("collaboratorEmails", options.collaboratorEmails.join(","))
+    if (options?.projectIds?.length) params.append("projectIds", options.projectIds.join(","))
+    if (options?.taskIds?.length) params.append("taskIds", options.taskIds.join(","))
+
+    const response = await fetch(`${API_BASE_URL}/reports/clients?${params}`)
+    if (!response.ok) throw new Error("Failed to fetch client reports")
+    return response.json()
+  },
+}
+
+export const reportsApi = {
+  getCollaboratorReport: reportApi.getCollaboratorReport,
+  getAllCollaborators: reportApi.getAllCollaboratorReports,
+  getClientReport: reportApi.getClientReport,
+  getAllClients: reportApi.getAllClientReports,
 }

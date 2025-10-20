@@ -17,15 +17,24 @@ export default function DashboardPage() {
   })
   const [recentTasks, setRecentTasks] = useState<Tarefa[]>([])
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
     const fetchDashboardData = async () => {
       try {
+        console.log("[v0] Fetching dashboard data...")
+        console.log("[v0] Current URL:", window.location.href)
+
         const [clientes, projetos, tarefas] = await Promise.all([
           clienteApi.getAll(),
           projetoApi.getAll(),
           tarefaApi.getAll(),
         ])
+
+        console.log("[v0] Dashboard data fetched successfully")
+        console.log("[v0] Clientes:", clientes.length)
+        console.log("[v0] Projetos:", projetos.length)
+        console.log("[v0] Tarefas:", tarefas.length)
 
         setStats({
           totalClientes: clientes.length,
@@ -40,7 +49,9 @@ export default function DashboardPage() {
           .slice(0, 5)
         setRecentTasks(sortedTasks)
       } catch (error) {
-        console.error("Error fetching dashboard data:", error)
+        console.error("[v0] Error fetching dashboard data:", error)
+        const errorMessage = error instanceof Error ? error.message : "Erro desconhecido"
+        setError(errorMessage)
       } finally {
         setLoading(false)
       }
@@ -71,6 +82,32 @@ export default function DashboardPage() {
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
           <p className="mt-2 text-muted-foreground">Carregando dashboard...</p>
         </div>
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="flex items-center justify-center h-full">
+        <Card className="max-w-md">
+          <CardHeader>
+            <CardTitle className="text-destructive">Erro ao carregar dados</CardTitle>
+            <CardDescription>Não foi possível conectar com a API. Verifique se:</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-2">
+            <ul className="list-disc list-inside space-y-1 text-sm text-muted-foreground">
+              <li>A API está rodando em http://179.190.40.40:8081</li>
+              <li>Você está rodando o Next.js localmente (npm run dev)</li>
+              <li>Não há bloqueios de CORS ou firewall</li>
+            </ul>
+            <div className="mt-4 p-3 bg-muted rounded-md">
+              <p className="text-xs font-mono text-destructive">{error}</p>
+            </div>
+            <Button onClick={() => window.location.reload()} className="w-full mt-4">
+              Tentar novamente
+            </Button>
+          </CardContent>
+        </Card>
       </div>
     )
   }

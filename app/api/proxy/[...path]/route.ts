@@ -1,106 +1,133 @@
 import { type NextRequest, NextResponse } from "next/server"
 
-if (process.env.NODE_ENV === "production") {
-  process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0"
-}
-
-const getApiBaseUrl = () => {
-  const apiEnv = process.env.API_ENV || process.env.NODE_ENV
-
-  if (apiEnv === "prod" || apiEnv === "production") {
-    return "http://179.190.40.40:8081"
-  }
-
-  return "http://179.190.40.40:8081"
-}
-
-const API_BASE_URL = getApiBaseUrl()
+const API_BASE_URL = "http://localhost:8081"
 
 export async function GET(request: NextRequest, { params }: { params: { path: string[] } }) {
-  const path = params.path.join("/")
-  const searchParams = request.nextUrl.searchParams.toString()
-  const url = `${API_BASE_URL}/${path}${searchParams ? `?${searchParams}` : ""}`
-
-  try {
-    const response = await fetch(url, {
-      method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-      },
-    })
-
-    const data = await response.json()
-    return NextResponse.json(data, { status: response.status })
-  } catch (error) {
-    console.error("API Proxy Error:", error)
-    return NextResponse.json({ error: "Failed to fetch data" }, { status: 500 })
-  }
+  console.log("[v0] GET request received, params:", params)
+  return handleRequest(request, params.path, "GET")
 }
 
 export async function POST(request: NextRequest, { params }: { params: { path: string[] } }) {
-  const path = params.path.join("/")
-  const url = `${API_BASE_URL}/${path}`
-  const body = await request.text()
-
-  try {
-    const response = await fetch(url, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body,
-    })
-
-    const data = await response.json()
-    return NextResponse.json(data, { status: response.status })
-  } catch (error) {
-    console.error("API Proxy Error:", error)
-    return NextResponse.json({ error: "Failed to create data" }, { status: 500 })
-  }
+  console.log("[v0] POST request received, params:", params)
+  return handleRequest(request, params.path, "POST")
 }
 
 export async function PUT(request: NextRequest, { params }: { params: { path: string[] } }) {
-  const path = params.path.join("/")
-  const url = `${API_BASE_URL}/${path}`
-  const body = await request.text()
-
-  try {
-    const response = await fetch(url, {
-      method: "PUT",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body,
-    })
-
-    const data = await response.json()
-    return NextResponse.json(data, { status: response.status })
-  } catch (error) {
-    console.error("API Proxy Error:", error)
-    return NextResponse.json({ error: "Failed to update data" }, { status: 500 })
-  }
+  console.log("[v0] PUT request received, params:", params)
+  return handleRequest(request, params.path, "PUT")
 }
 
 export async function DELETE(request: NextRequest, { params }: { params: { path: string[] } }) {
-  const path = params.path.join("/")
-  const url = `${API_BASE_URL}/${path}`
+  console.log("[v0] DELETE request received, params:", params)
+  return handleRequest(request, params.path, "DELETE")
+}
 
+async function handleRequest(request: NextRequest, pathSegments: string[], method: string) {
   try {
-    const response = await fetch(url, {
-      method: "DELETE",
-      headers: {
-        "Content-Type": "application/json",
-      },
-    })
+    console.log("[v0] handleRequest called with pathSegments:", pathSegments, "method:", method)
 
-    if (response.status === 204) {
-      return new NextResponse(null, { status: 204 })
+    const path = pathSegments.join("/")
+    const url = `${API_BASE_URL}/${path}`
+
+    // Get query parameters
+    const searchParams = new URL(request.url).searchParams
+    const queryString = searchParams.toString()
+    const finalUrl = queryString ? `${url}?${queryString}` : url
+
+    console.log(`[v0] Proxying ${method} request to: ${finalUrl}`)
+
+    // Prepare headers
+    const headers: HeadersInit = {
+      "Content-Type": "application/json",
+      Accept: "application/json",
+      // Add any auth headers if needed
     }
 
-    const data = await response.json()
-    return NextResponse.json(data, { status: response.status })
+    // Prepare request options
+    const requestOptions: RequestInit = {
+      method,
+      headers,
+      redirect: "manual", // Don't follow redirects automatically
+    }
+
+    // Add body for POST/PUT requests
+    if (method === "POST" || method === "PUT") {
+      const body = await request.text()
+      if (body) {
+        requestOptions.body = body
+      }
+    }
+
+    const response = await fetch(finalUrl, requestOptions)
+
+    console.log(`[v0] API Response status: ${response.status}`)
+
+    // Handle redirects (likely auth redirects)
+    if (response.status >= 300 && response.status < 400) {
+      const location = response.headers.get("location")
+      console.log(`[v0] API redirected to: ${location}`)
+
+      // Return error for auth redirects instead of following them
+      return NextResponse.json(
+        {
+          error: "Authentication required",
+          message: "API requires authentication. Please check your backend auth configuration.",
+          redirectUrl: location,
+        },
+        { status: 401 },
+      )
+    }
+
+    // Get response data
+    const contentType = response.headers.get("content-type")
+    let data
+
+    if (contentType?.includes("application/json")) {
+      data = await response.json()
+    } else {
+      data = await response.text()
+    }
+
+    console.log(`[v0] API Response data:`, data)
+
+    // Return successful response with CORS headers
+    return NextResponse.json(data, {
+      status: response.status,
+      headers: {
+        "Access-Control-Allow-Origin": "*",
+        "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
+        "Access-Control-Allow-Headers": "Content-Type, Authorization",
+      },
+    })
   } catch (error) {
-    console.error("API Proxy Error:", error)
-    return NextResponse.json({ error: "Failed to delete data" }, { status: 500 })
+    console.error("[v0] Proxy error:", error)
+
+    return NextResponse.json(
+      {
+        error: "Proxy error",
+        message: error instanceof Error ? error.message : "Unknown error",
+        details: "Failed to connect to backend API",
+      },
+      {
+        status: 500,
+        headers: {
+          "Access-Control-Allow-Origin": "*",
+          "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
+          "Access-Control-Allow-Headers": "Content-Type, Authorization",
+        },
+      },
+    )
   }
+}
+
+export async function OPTIONS() {
+  console.log("[v0] OPTIONS request received")
+  return new NextResponse(null, {
+    status: 200,
+    headers: {
+      "Access-Control-Allow-Origin": "*",
+      "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
+      "Access-Control-Allow-Headers": "Content-Type, Authorization",
+    },
+  })
 }
