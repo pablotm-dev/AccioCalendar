@@ -78,7 +78,7 @@ export function DateFilterModal({ open, onOpenChange, onDownload, title, descrip
             />
           </div>
           <p className="text-sm text-muted-foreground">
-            Se as datas não forem fornecidas, o relatório incluirá todos os dados disponíveis.
+            Se as datas não forem fornecidas, o relatório incluirá todos os dados disponíveis erro.
           </p>
         </div>
         <DialogFooter>
