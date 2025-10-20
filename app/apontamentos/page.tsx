@@ -16,8 +16,19 @@ import {
   type CollaboratorReport,
   type ClientReport,
 } from "@/lib/api"
-import { Search, Download, BarChart3, Users, Building2, TrendingUp, Clock, FileText } from "lucide-react"
+import {
+  Search,
+  Download,
+  BarChart3,
+  Users,
+  Building2,
+  TrendingUp,
+  Clock,
+  FileText,
+  FileSpreadsheet,
+} from "lucide-react"
 import { BarChart, Bar, PieChart, Pie, Cell, ResponsiveContainer, XAxis, YAxis, Tooltip } from "recharts"
+import { DateFilterModal } from "@/components/apontamentos/date-filter-modal"
 
 export default function ApontamentosPage() {
   const [clientes, setClientes] = useState<Cliente[]>([])
@@ -32,6 +43,10 @@ export default function ApontamentosPage() {
   const [selectedProjectId, setSelectedProjectId] = useState<string>("all")
   const [dateFrom, setDateFrom] = useState("")
   const [dateTo, setDateTo] = useState("")
+  const [excelModalOpen, setExcelModalOpen] = useState(false)
+  const [excelModalType, setExcelModalType] = useState<"collaborator" | "client">("collaborator")
+  const [selectedEmailForExcel, setSelectedEmailForExcel] = useState("")
+  const [selectedClientIdForExcel, setSelectedClientIdForExcel] = useState(0)
 
   const fetchData = async () => {
     try {
@@ -235,6 +250,7 @@ export default function ApontamentosPage() {
                       <TableHead>Projetos</TableHead>
                       <TableHead>Tarefas</TableHead>
                       <TableHead>Período Pico</TableHead>
+                      <TableHead className="text-right">Ações</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -260,6 +276,20 @@ export default function ApontamentosPage() {
                                 : "N/A"}
                             </span>
                           </div>
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => {
+                              setSelectedEmailForExcel(report.collaboratorEmail)
+                              setExcelModalType("collaborator")
+                              setExcelModalOpen(true)
+                            }}
+                          >
+                            <FileSpreadsheet className="mr-2 h-4 w-4" />
+                            Excel
+                          </Button>
                         </TableCell>
                       </TableRow>
                     ))}
@@ -289,11 +319,7 @@ export default function ApontamentosPage() {
                 ).size
 
                 return (
-                  <Card
-                    key={report.clientId}
-                    className="cursor-pointer hover:shadow-md transition-shadow"
-                    onClick={() => viewClientReport(report.clientId)}
-                  >
+                  <Card key={report.clientId} className="hover:shadow-md transition-shadow">
                     <CardHeader>
                       <CardTitle className="flex items-center justify-between">
                         <span className="truncate">{report.clientName}</span>
@@ -317,6 +343,27 @@ export default function ApontamentosPage() {
                         <div className="flex justify-between">
                           <span className="text-sm text-muted-foreground">Colaboradores:</span>
                           <span className="font-medium">{totalCollaborators}</span>
+                        </div>
+                        <div className="flex gap-2 mt-4">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="flex-1 bg-transparent"
+                            onClick={() => viewClientReport(report.clientId)}
+                          >
+                            Ver Detalhes
+                          </Button>
+                          <Button
+                            variant="default"
+                            size="sm"
+                            onClick={() => {
+                              setSelectedClientIdForExcel(report.clientId)
+                              setExcelModalType("client")
+                              setExcelModalOpen(true)
+                            }}
+                          >
+                            <FileSpreadsheet className="h-4 w-4" />
+                          </Button>
                         </div>
                       </div>
                     </CardContent>
@@ -666,6 +713,21 @@ export default function ApontamentosPage() {
           </CardContent>
         </Card>
       )}
+
+      {/* DateFilterModal for Excel downloads */}
+      <DateFilterModal
+        open={excelModalOpen}
+        onOpenChange={setExcelModalOpen}
+        onDownload={async (startDate, endDate) => {
+          if (excelModalType === "collaborator") {
+            await reportsApi.downloadCollaboratorExcel(selectedEmailForExcel, startDate, endDate)
+          } else {
+            await reportsApi.downloadClientExcel(selectedClientIdForExcel, startDate, endDate)
+          }
+        }}
+        title={excelModalType === "collaborator" ? "Baixar Relatório de Colaborador" : "Baixar Relatório de Cliente"}
+        description="Selecione o período para filtrar o relatório. Deixe em branco para incluir todos os dados."
+      />
     </div>
   )
 }

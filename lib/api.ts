@@ -369,4 +369,41 @@ export const reportsApi = {
   getAllCollaborators: reportApi.getAllCollaboratorReports,
   getClientReport: reportApi.getClientReport,
   getAllClients: reportApi.getAllClientReports,
+  downloadCollaboratorExcel: async (email: string, startDate?: string, endDate?: string): Promise<void> => {
+    const params = new URLSearchParams()
+    if (startDate) params.append("startDateStr", startDate)
+    if (endDate) params.append("endDateStr", endDate)
+
+    const response = await fetch(`${API_BASE_URL}/reports/collaborators/${email}/excel?${params}`)
+    if (!response.ok) throw new Error("Failed to download collaborator Excel report")
+
+    const blob = await response.blob()
+    const downloadUrl = window.URL.createObjectURL(blob)
+    const a = document.createElement("a")
+    a.href = downloadUrl
+    a.download = `relatorio_${email.replace("@", "_at_")}_${new Date().toISOString().split("T")[0]}.xlsx`
+    document.body.appendChild(a)
+    a.click()
+    window.URL.revokeObjectURL(downloadUrl)
+    document.body.removeChild(a)
+  },
+
+  downloadClientExcel: async (clientId: number, startDate?: string, endDate?: string): Promise<void> => {
+    const params = new URLSearchParams()
+    if (startDate) params.append("startDateStr", startDate)
+    if (endDate) params.append("endDateStr", endDate)
+
+    const response = await fetch(`${API_BASE_URL}/reports/clients/${clientId}/excel?${params}`)
+    if (!response.ok) throw new Error("Failed to download client Excel report")
+
+    const blob = await response.blob()
+    const downloadUrl = window.URL.createObjectURL(blob)
+    const a = document.createElement("a")
+    a.href = downloadUrl
+    a.download = `relatorio_cliente_${clientId}_${new Date().toISOString().split("T")[0]}.xlsx`
+    document.body.appendChild(a)
+    a.click()
+    window.URL.revokeObjectURL(downloadUrl)
+    document.body.removeChild(a)
+  },
 }
